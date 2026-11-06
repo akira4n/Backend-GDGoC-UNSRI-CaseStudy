@@ -1,0 +1,105 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  LEAD
+  DIVISION_HEAD
+  MEMBER
+}
+
+model User {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String
+  email     String    @unique
+  password  String
+  role      Role      @default(MEMBER)
+  division  String?
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  registrations  EventRegistration[]
+  attendances    Attendance[]
+  createdEvents  Event[]             @relation("EventCreator")
+  actedAuditLogs AuditLog[]          @relation("AuditActor")
+
+  @@index([email])
+  @@index([role, division])
+  @@map("users")
+}
+
+model Event {
+  id              String   @id @default(uuid()) @db.Uuid
+  title           String
+  slug            String   @unique
+  description     String?  @db.Text
+  quota           Int
+  registeredCount Int      @default(0) @map("registered_count")
+  startTime       DateTime @map("start_time") @db.Timestamptz
+  endTime         DateTime @map("end_time") @db.Timestamptz
+  createdBy       String   @map("created_by") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  creator       User                @relation("EventCreator", fields: [createdBy], references: [id])
+  registrations EventRegistration[]
+  attendances   Attendance[]
+
+  @@index([startTime, endTime])
+  @@map("events")
+}
+
+model EventRegistration {
+  id           String   @id @default(uuid()) @db.Uuid
+  eventId      String   @map("event_id") @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  registeredAt DateTime @default(now()) @map("registered_at") @db.Timestamptz
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([eventId, userId])
+  @@map("event_registrations")
+}
+
+model Attendance {
+  id          String   @id @default(uuid()) @db.Uuid
+  eventId     String   @map("event_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  checkedInAt DateTime @default(now()) @map("checked_in_at") @db.Timestamptz
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([eventId, userId])
+  @@map("attendances")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  actorId   String   @map("actor_id") @db.Uuid
+  targetId  String?  @map("target_id") @db.Uuid
+  action    String
+  oldValues Json?    @map("old_values")
+  newValues Json?    @map("new_values")
+  ipAddress String   @map("ip_address")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  actor User @relation("AuditActor", fields: [actorId], references: [id])
+
+  @@index([actorId])
+  @@map("audit_logs")
+}
