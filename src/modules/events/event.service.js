@@ -181,5 +181,12 @@ export const registerForEvent = async (eventId, userId) => {
     throw err;
   }
 
+  const currentTime = new Date();
+  if (currentTime > new Date(event.endTime)) {
+    const err = new Error('Registration closed. Event has already ended.');
+    err.status = 400;
+    throw err;
+  }
+
   return await eventRepository.registerUserAtomic(eventId, userId);
 };
