@@ -7,7 +7,9 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "db:seed": "node prisma/seed.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest --runInBand",
+    "test:unit": "NODE_OPTIONS=\"--experimental-vm-modules\" jest tests/unit",
+    "test:integration": "NODE_OPTIONS=\"--experimental-vm-modules\" jest tests/integration --runInBand"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
