@@ -10,10 +10,7 @@ async function main() {
   // Akun LEAD
   const lead = await prisma.user.upsert({
     where: { email: 'lead@gdgoc-unsri.org' },
-    update: {
-      password: defaultPassword,
-      role: 'LEAD',
-    },
+    update: {},
     create: {
       name: 'Lead GDGoC UNSRI',
       email: 'lead@gdgoc-unsri.org',
@@ -26,10 +23,7 @@ async function main() {
   // Akun DIVISION_HEAD
   const divisionHead = await prisma.user.upsert({
     where: { email: 'head.web@gdgoc-unsri.org' },
-    update: {
-      password: defaultPassword,
-      role: 'DIVISION_HEAD',
-    },
+    update: {},
     create: {
       name: 'Web Dev Division Head',
       email: 'head.web@gdgoc-unsri.org',
@@ -42,10 +36,7 @@ async function main() {
   // Akun MEMBER
   const member = await prisma.user.upsert({
     where: { email: 'member@gdgoc-unsri.org' },
-    update: {
-      password: defaultPassword,
-      role: 'MEMBER',
-    },
+    update: {},
     create: {
       name: 'John Member',
       email: 'member@gdgoc-unsri.org',
