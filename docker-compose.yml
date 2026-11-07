@@ -1,13 +1,13 @@
 services:
   postgres:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-gdgoc_db}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     networks:
       - app-network
     healthcheck:
@@ -40,4 +40,4 @@ networks:
     driver: bridge
 
 volumes:
-  pgdata:
+  postgres_data:
