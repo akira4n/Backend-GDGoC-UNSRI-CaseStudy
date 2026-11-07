@@ -1,0 +1,553 @@
+{
+  "info": {
+    "_postman_id": "gdgoc-unsri-backend-api-collection",
+    "name": "GDGoC UNSRI Core Team & Member Management API",
+    "description": "API Collection untuk Assignment GDGoC UNSRI Core Team Web Dev.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Memeriksa status kesehatan layanan API."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Authentication",
+      "item": [
+        {
+          "name": "Register New Member",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Budi Santoso\",\n  \"email\": \"budi.santoso@gdgoc-unsri.org\",\n  \"password\": \"password123\",\n  \"division\": \"Web Development\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "auth", "register"]
+            },
+            "description": "Pendaftaran anggota baru. Peran otomatis ditetapkan sebagai MEMBER (mass-assignment guard aktif)."
+          },
+          "response": []
+        },
+        {
+          "name": "Login as LEAD",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.token) {",
+                  "        pm.environment.set('token', jsonData.data.token);",
+                  "        pm.collectionVariables.set('token', jsonData.data.token);",
+                  "        console.log('JWT Token successfully stored as {{token}}');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"lead@gdgoc-unsri.org\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "auth", "login"]
+            },
+            "description": "Login sebagai akun LEAD. Token JWT otomatis tersimpan ke variabel {{token}}."
+          },
+          "response": []
+        },
+        {
+          "name": "Login as DIVISION_HEAD",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.token) {",
+                  "        pm.environment.set('token', jsonData.data.token);",
+                  "        pm.collectionVariables.set('token', jsonData.data.token);",
+                  "        console.log('JWT Token successfully stored as {{token}}');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"head.web@gdgoc-unsri.org\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "auth", "login"]
+            },
+            "description": "Login sebagai akun DIVISION_HEAD (Web Development)."
+          },
+          "response": []
+        },
+        {
+          "name": "Login as MEMBER",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.token) {",
+                  "        pm.environment.set('token', jsonData.data.token);",
+                  "        pm.collectionVariables.set('token', jsonData.data.token);",
+                  "        console.log('JWT Token successfully stored as {{token}}');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"member@gdgoc-unsri.org\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "auth", "login"]
+            },
+            "description": "Login sebagai akun MEMBER reguler."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Users Management",
+      "item": [
+        {
+          "name": "Get Users (Pagination, Search, Filter, Sort)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/users?page=1&limit=10&search=&division=&role=&sortBy=created_at&sortOrder=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "users"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "" },
+                { "key": "division", "value": "" },
+                { "key": "role", "value": "" },
+                { "key": "sortBy", "value": "created_at" },
+                { "key": "sortOrder", "value": "desc" }
+              ]
+            },
+            "description": "Mendapatkan daftar pengguna aktif dengan pagination, pencarian nama/email, filter divisi/peran, dan pengurutan. Memerlukan role LEAD atau DIVISION_HEAD."
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Role [LEAD Only]",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"DIVISION_HEAD\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/users/:id/role",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "users", ":id", "role"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "PASTE_USER_UUID_HERE",
+                  "description": "UUID pengguna yang akan diubah perannya"
+                }
+              ]
+            },
+            "description": "Mengubah peran pengguna. Hanya bisa dilakukan oleh LEAD. Aksi ini otomatis tercatat di Audit Log."
+          },
+          "response": []
+        },
+        {
+          "name": "Soft Delete User [LEAD Only]",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "PASTE_USER_UUID_HERE",
+                  "description": "UUID pengguna yang akan dinonaktifkan"
+                }
+              ]
+            },
+            "description": "Menonaktifkan pengguna secara soft delete (menyetel deleted_at). Pengguna tidak dapat login kembali. Aksi tercatat di Audit Log."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Events Management",
+      "item": [
+        {
+          "name": "Get Events (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/events?page=1&limit=10&search=&sortBy=start_time&sortOrder=asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "events"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "" },
+                { "key": "sortBy", "value": "start_time" },
+                { "key": "sortOrder", "value": "asc" }
+              ]
+            },
+            "description": "Mendapatkan daftar event aktif untuk publik dengan pagination dan pencarian judul/lokasi."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Event Detail by ID or Slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/events/:identifier",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "events", ":identifier"],
+              "variable": [
+                {
+                  "key": "identifier",
+                  "value": "workshop-cloud-computing-2026",
+                  "description": "Bisa berupa UUID event atau slug URL event"
+                }
+              ]
+            },
+            "description": "Mengambil detail event menggunakan UUID atau slug URL yang bersahabat."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Event [LEAD / DIVISION_HEAD]",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Cloud Architecture Study Jam 2026\",\n  \"description\": \"Belajar mendesain sistem backend scalable dengan Docker dan Google Cloud Run.\",\n  \"location\": \"Aula Gedung Fakultas Ilmu Komputer UNSRI\",\n  \"startTime\": \"2026-11-20T09:00:00.000Z\",\n  \"endTime\": \"2026-11-20T16:00:00.000Z\",\n  \"quota\": 100\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "events"]
+            },
+            "description": "Membuat event baru beserta slug otomatis. Memerlukan role LEAD atau DIVISION_HEAD."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Event [LEAD / DIVISION_HEAD]",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quota\": 150,\n  \"location\": \"Auditorium Utama UNSRI\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/events/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "events", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "PASTE_EVENT_UUID_HERE",
+                  "description": "UUID event yang akan diupdate"
+                }
+              ]
+            },
+            "description": "Memperbarui event. Jika kuota diubah, sistem otomatis mencatat riwayat perubahan di Audit Log."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Event [LEAD / DIVISION_HEAD]",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/events/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "events", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "PASTE_EVENT_UUID_HERE",
+                  "description": "UUID event yang akan dihapus"
+                }
+              ]
+            },
+            "description": "Menghapus event secara permanen. Snapshot data event disimpan di Audit Log."
+          },
+          "response": []
+        },
+        {
+          "name": "Register for Event (Concurrency Safe)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/events/:id/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "events", ":id", "register"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "PASTE_EVENT_UUID_HERE",
+                  "description": "UUID event yang ingin didaftari"
+                }
+              ]
+            },
+            "description": "Pendaftaran peserta event. Dilindungi PostgreSQL Row-Level Lock (anti-overbooking), anti-pendaftaran ganda, dan penolakan otomatis jika waktu event telah berakhir (HTTP 400)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Attendances",
+      "item": [
+        {
+          "name": "Check-In Attendance (Idempotent)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/attendances/:eventId/check-in",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "attendances", ":eventId", "check-in"],
+              "variable": [
+                {
+                  "key": "eventId",
+                  "value": "PASTE_EVENT_UUID_HERE",
+                  "description": "UUID event yang sedang berlangsung"
+                }
+              ]
+            },
+            "description": "Melakukan absensi kehadiran peserta. Bersifat idempoten (check-in berulang mengembalikan 200 dengan data yang sama tanpa menduplikasi baris). Hanya valid pada jendela waktu event dan bagi peserta terdaftar."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. Audit Logs",
+      "item": [
+        {
+          "name": "Get Audit Logs [LEAD Only]",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/audit-logs?page=1&limit=10&action=&performedBy=&entityType=&entityId=&sortBy=created_at&sortOrder=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "audit-logs"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "action", "value": "" },
+                { "key": "performedBy", "value": "" },
+                { "key": "entityType", "value": "" },
+                { "key": "entityId", "value": "" },
+                { "key": "sortBy", "value": "created_at" },
+                { "key": "sortOrder", "value": "desc" }
+              ]
+            },
+            "description": "Melihat riwayat audit trail perubahan data sensitif. Hanya dapat diakses oleh peran LEAD."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

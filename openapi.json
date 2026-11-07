@@ -1,0 +1,333 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "GDGoC UNSRI Core Team & Member Management API",
+    "version": "1.0.0",
+    "description": "Production REST API for GDGoC UNSRI Core Team & Member Management. Features Role-Based Access Control (LEAD, DIVISION_HEAD, MEMBER), Concurrency-Safe Event Registration, Idempotent Attendance Check-In, Soft Delete, Append-Only Audit Trail, and Tiered Rate Limiting."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api",
+      "description": "Local Development / Containerized Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Enter your JWT token obtained from POST /api/v1/auth/login"
+      }
+    },
+    "schemas": {
+      "StandardResponseEnvelope": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "success" },
+          "message": { "type": "string", "example": "Operation completed successfully." },
+          "data": { "type": "object" },
+          "meta": { "type": "object" }
+        }
+      },
+      "ErrorResponseEnvelope": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "error" },
+          "message": { "type": "string", "example": "Error description." },
+          "errors": {
+            "type": "array",
+            "items": { "type": "object" }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "tags": ["System"],
+        "responses": {
+          "200": { "description": "Service is healthy." }
+        }
+      }
+    },
+    "/v1/auth/register": {
+      "post": {
+        "summary": "Register New Member",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email", "password"],
+                "properties": {
+                  "name": { "type": "string", "example": "Budi Santoso" },
+                  "email": { "type": "string", "format": "email", "example": "budi.santoso@gdgoc-unsri.org" },
+                  "password": { "type": "string", "minLength": 8, "example": "password123" },
+                  "division": { "type": "string", "example": "Web Development" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Registration successful." },
+          "400": { "description": "Validation error." },
+          "409": { "description": "Email already exists." }
+        }
+      }
+    },
+    "/v1/auth/login": {
+      "post": {
+        "summary": "User Login",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email", "example": "lead@gdgoc-unsri.org" },
+                  "password": { "type": "string", "example": "password123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login successful." },
+          "401": { "description": "Invalid credentials or account deactivated." },
+          "429": { "description": "Too many failed attempts." }
+        }
+      }
+    },
+    "/v1/users": {
+      "get": {
+        "summary": "Get Paginated Users List",
+        "tags": ["Users"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "division", "in": "query", "schema": { "type": "string" } },
+          { "name": "role", "in": "query", "schema": { "type": "string", "enum": ["LEAD", "DIVISION_HEAD", "MEMBER"] } },
+          { "name": "sortBy", "in": "query", "schema": { "type": "string", "default": "created_at" } },
+          { "name": "sortOrder", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"], "default": "desc" } }
+        ],
+        "responses": {
+          "200": { "description": "Users retrieved successfully." },
+          "401": { "description": "Unauthorized." },
+          "403": { "description": "Forbidden (LEAD or DIVISION_HEAD only)." }
+        }
+      }
+    },
+    "/v1/users/{id}/role": {
+      "patch": {
+        "summary": "Update User Role",
+        "tags": ["Users"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["role"],
+                "properties": {
+                  "role": { "type": "string", "enum": ["LEAD", "DIVISION_HEAD", "MEMBER"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "User role updated successfully." },
+          "403": { "description": "Forbidden (LEAD only)." },
+          "404": { "description": "User not found." }
+        }
+      }
+    },
+    "/v1/users/{id}": {
+      "delete": {
+        "summary": "Soft Delete User",
+        "tags": ["Users"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "User deactivated successfully." },
+          "400": { "description": "Cannot deactivate your own account." },
+          "403": { "description": "Forbidden (LEAD only)." },
+          "404": { "description": "User not found." }
+        }
+      }
+    },
+    "/v1/events": {
+      "get": {
+        "summary": "Get Events (Public)",
+        "tags": ["Events"],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "sortBy", "in": "query", "schema": { "type": "string", "default": "start_time" } },
+          { "name": "sortOrder", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"], "default": "asc" } }
+        ],
+        "responses": {
+          "200": { "description": "Events retrieved successfully." }
+        }
+      },
+      "post": {
+        "summary": "Create Event",
+        "tags": ["Events"],
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "description", "location", "startTime", "endTime", "quota"],
+                "properties": {
+                  "title": { "type": "string", "example": "Cloud Study Jam 2026" },
+                  "description": { "type": "string", "example": "Belajar Docker & Cloud Run." },
+                  "location": { "type": "string", "example": "Aula Fasilkom UNSRI" },
+                  "startTime": { "type": "string", "format": "date-time", "example": "2026-11-20T09:00:00.000Z" },
+                  "endTime": { "type": "string", "format": "date-time", "example": "2026-11-20T16:00:00.000Z" },
+                  "quota": { "type": "integer", "minimum": 1, "example": 100 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Event created successfully." },
+          "400": { "description": "Start time must be before end time." },
+          "403": { "description": "Forbidden (LEAD or DIVISION_HEAD only)." }
+        }
+      }
+    },
+    "/v1/events/{identifier}": {
+      "get": {
+        "summary": "Get Event Detail by UUID or Slug",
+        "tags": ["Events"],
+        "parameters": [
+          { "name": "identifier", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Event UUID or URL Slug" }
+        ],
+        "responses": {
+          "200": { "description": "Event retrieved successfully." },
+          "404": { "description": "Event not found." }
+        }
+      }
+    },
+    "/v1/events/{id}": {
+      "patch": {
+        "summary": "Update Event",
+        "tags": ["Events"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "description": { "type": "string" },
+                  "location": { "type": "string" },
+                  "startTime": { "type": "string", "format": "date-time" },
+                  "endTime": { "type": "string", "format": "date-time" },
+                  "quota": { "type": "integer", "minimum": 1 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Event updated successfully." },
+          "403": { "description": "Forbidden." },
+          "404": { "description": "Event not found." }
+        }
+      },
+      "delete": {
+        "summary": "Delete Event",
+        "tags": ["Events"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Event deleted successfully." },
+          "403": { "description": "Forbidden." },
+          "404": { "description": "Event not found." }
+        }
+      }
+    },
+    "/v1/events/{id}/register": {
+      "post": {
+        "summary": "Register for Event (Concurrency-Safe)",
+        "tags": ["Events"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "201": { "description": "Successfully registered for event." },
+          "400": { "description": "Registration closed. Event has already ended." },
+          "404": { "description": "Event not found." },
+          "409": { "description": "Event quota full or already registered." }
+        }
+      }
+    },
+    "/v1/attendances/{eventId}/check-in": {
+      "post": {
+        "summary": "Check-In Attendance (Idempotent)",
+        "tags": ["Attendances"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "eventId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Attendance recorded or already checked in." },
+          "400": { "description": "Outside active event time window." },
+          "403": { "description": "User is not registered for this event." },
+          "404": { "description": "Event not found." }
+        }
+      }
+    },
+    "/v1/audit-logs": {
+      "get": {
+        "summary": "Get Audit Trail Logs",
+        "tags": ["Audit Logs"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } },
+          { "name": "action", "in": "query", "schema": { "type": "string" } },
+          { "name": "performedBy", "in": "query", "schema": { "type": "string", "format": "uuid" } },
+          { "name": "entityType", "in": "query", "schema": { "type": "string" } },
+          { "name": "entityId", "in": "query", "schema": { "type": "string" } },
+          { "name": "sortBy", "in": "query", "schema": { "type": "string", "default": "created_at" } },
+          { "name": "sortOrder", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"], "default": "desc" } }
+        ],
+        "responses": {
+          "200": { "description": "Audit logs retrieved successfully." },
+          "403": { "description": "Forbidden (LEAD only)." }
+        }
+      }
+    }
+  }
+}
