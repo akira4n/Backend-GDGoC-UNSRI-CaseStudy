@@ -4,6 +4,7 @@ import { errorHandler } from './middlewares/error.middleware.js';
 import authRoutes from './modules/auth/auth.routes.js';
 import auditRoutes from './modules/audit/audit.routes.js';
 import userRoutes from './modules/users/user.routes.js';
+import eventRoutes from './modules/events/event.routes.js';
 
 const app = express();
 
@@ -25,6 +26,7 @@ const v1Router = express.Router();
 v1Router.use('/auth', authRoutes);
 v1Router.use('/audit-logs', auditRoutes);
 v1Router.use('/users', userRoutes);
+v1Router.use('/events', eventRoutes);
 
 app.use('/api/v1', v1Router);
 
