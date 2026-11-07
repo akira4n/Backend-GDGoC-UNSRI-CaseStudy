@@ -9,6 +9,7 @@ import {
 import { validate } from '../../middlewares/validate.middleware.js';
 import { authenticate } from '../../middlewares/auth.middleware.js';
 import { authorizeRoles } from '../../middlewares/rbac.middleware.js';
+import { actionRateLimiter } from '../../middlewares/rate-limit.middleware.js';
 
 const router = Router();
 
@@ -42,6 +43,7 @@ router.delete(
 router.post(
   '/:id/register',
   authenticate,
+  actionRateLimiter,
   validate(eventParamSchema),
   eventController.registerEvent,
 );
