@@ -225,14 +225,31 @@ describe('Event Service (Unit Test)', () => {
   });
 
   describe('registerForEvent', () => {
-    it('should trigger registerUserAtomic when event exists', async () => {
-      mockFindEventById.mockResolvedValue({ id: 'event-1' });
+    it('should trigger registerUserAtomic when event exists and has not ended', async () => {
+      mockFindEventById.mockResolvedValue({
+        id: 'event-1',
+        endTime: new Date(Date.now() + 1000 * 60 * 60),
+      });
       mockRegisterUserAtomic.mockResolvedValue({ id: 'reg-1', eventId: 'event-1', userId: 'user-1' });
 
       const result = await eventService.registerForEvent('event-1', 'user-1');
 
       expect(mockRegisterUserAtomic).toHaveBeenCalledWith('event-1', 'user-1');
       expect(result.id).toBe('reg-1');
+    });
+
+    it('should throw HTTP 400 if event has already ended', async () => {
+      mockFindEventById.mockResolvedValue({
+        id: 'event-1',
+        endTime: new Date(Date.now() - 1000 * 60 * 60),
+      });
+
+      await expect(
+        eventService.registerForEvent('event-1', 'user-1'),
+      ).rejects.toMatchObject({
+        message: 'Registration closed. Event has already ended.',
+        status: 400,
+      });
     });
 
     it('should throw HTTP 404 if event does not exist', async () => {
