@@ -5,6 +5,7 @@ import authRoutes from './modules/auth/auth.routes.js';
 import auditRoutes from './modules/audit/audit.routes.js';
 import userRoutes from './modules/users/user.routes.js';
 import eventRoutes from './modules/events/event.routes.js';
+import attendanceRoutes from './modules/attendances/attendance.routes.js';
 
 const app = express();
 
@@ -27,6 +28,7 @@ v1Router.use('/auth', authRoutes);
 v1Router.use('/audit-logs', auditRoutes);
 v1Router.use('/users', userRoutes);
 v1Router.use('/events', eventRoutes);
+v1Router.use('/attendances', attendanceRoutes);
 
 app.use('/api/v1', v1Router);
 
