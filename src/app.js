@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import { httpLogger } from './config/logger.js';
 import { errorHandler } from './middlewares/error.middleware.js';
 import { globalRateLimiter } from './middlewares/rate-limit.middleware.js';
@@ -10,6 +11,7 @@ import attendanceRoutes from './modules/attendances/attendance.routes.js';
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
