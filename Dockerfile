@@ -5,6 +5,7 @@ WORKDIR /app
 
 COPY package*.json ./
 COPY prisma ./prisma/
+COPY prisma7.config.ts ./
 
 RUN npm ci
 RUN npx prisma generate
@@ -20,6 +21,7 @@ ENV NODE_ENV=production
 COPY package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY prisma ./prisma
+COPY prisma7.config.ts ./
 COPY src ./src
 
 EXPOSE 3000
